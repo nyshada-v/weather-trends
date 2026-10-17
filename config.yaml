@@ -1,0 +1,61 @@
+project:
+  name: weather-extremes
+  random_seed: 42
+
+data:
+  station_id: USW00094728
+  station_name: NY CITY CENTRAL PARK
+  start_date: "2000-01-01"
+  end_date: "2023-12-31"
+  elements: [TMAX, TMIN, PRCP, SNOW, SNWD]
+  units: metric
+  base_url: https://www.ncei.noaa.gov/pub/data/ghcn/daily
+  raw_dir: data/raw
+  interim_dir: data/interim
+  processed_dir: data/processed
+  download: true
+  force_download: false
+
+features:
+  rolling_windows: [3, 7]
+  lag_days: [1, 2, 3, 7]
+  climatology_window: 15
+  min_years_for_baseline: 5
+  include_precip_context: true
+  include_current_observation: false
+
+labeling:
+  scheme: seasonal_percentile
+  hot_quantile: 0.95
+  cold_quantile: 0.05
+
+split:
+  strategy: time
+  train_frac: 0.6
+  val_frac: 0.2
+  test_frac: 0.2
+
+model:
+  models: [logistic_regression, random_forest]
+  primary: random_forest
+  logistic_regression:
+    C: 1.0
+    max_iter: 2000
+    class_weight: balanced
+  random_forest:
+    n_estimators: 500
+    max_depth: null
+    min_samples_leaf: 5
+    class_weight: balanced_subsample
+    n_jobs: -1
+
+evaluation:
+  alert_threshold: 0.5
+  roc_multi_class: ovr
+  binary_extreme_auc: true
+
+output:
+  reports_dir: reports
+  figures_dir: reports/figures
+  metrics_dir: reports/metrics
+  models_dir: models
